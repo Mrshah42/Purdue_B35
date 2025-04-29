@@ -190,7 +190,7 @@ git log --pretty=format:"%h - %an - %ar - %s"
 
 
 Clone:
-======
+=======
 git clone dir1 dir2  -- it makes another copy of local repo, this is local cloning.
 
 git clone "remote URl"
