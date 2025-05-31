@@ -1,0 +1,155 @@
+
+
+
+
+
+Below Pipeline script runs on any agent(Master)
+
+pipeline {
+    
+    agent any
+    
+    tools{
+        jdk 'myjava'
+        maven 'mymaven'
+    }
+
+   stages{
+       
+       stage('CloneRepo')
+       {
+           steps{
+               git 'https://github.com/Sonal0409/DevOpsClassCodes.git'
+ 
+           }
+       }
+       
+       stage('Compile')
+       {
+           steps{
+               sh  'mvn compile'
+               
+           }
+       }
+       
+       stage('CodeReview')
+       {
+           steps{
+               sh 'mvn pmd:pmd'
+           }
+           post{
+               success{
+                   recordIssues(tools: [pmdParser(pattern: 'target/pmd.xml')])
+               }
+           }
+       }
+       
+       stage('UnitTesting')
+       {
+           steps{
+               sh 'mvn test'
+           }
+           post{
+               success{
+                   junit 'target/surefire-reports/*.xml'
+               }
+           }
+       }
+       
+       stage('CodeCoverage')
+       {
+           steps{
+               sh 'mvn cobertura:cobertura -Dcobertura.report.format=xml'
+           }
+       }
+       
+       stage('package')
+       {
+           steps{
+               sh 'mvn package'
+           }
+       }
+   }
+   
+   
+}
+
+
+Below Pipeline script runs on linux-slave01 with Cobertura Post build actions.
+
+
+pipeline {
+    
+    agent {
+        label 'slave01'
+    }
+    
+    tools{
+        jdk 'myjava'
+        maven 'mymaven'
+    }
+
+   stages{
+       
+       stage('CloneRepo')
+       {
+           steps{
+               git 'https://github.com/Sonal0409/DevOpsClassCodes.git'
+ 
+           }
+       }
+       
+       stage('Compile')
+       {
+           steps{
+               sh  'mvn compile'
+               
+           }
+       }
+       
+       stage('CodeReview')
+       {
+           steps{
+               sh 'mvn pmd:pmd'
+           }
+           post{
+               success{
+                   recordIssues(tools: [pmdParser(pattern: 'target/pmd.xml')])
+               }
+           }
+       }
+       
+       stage('UnitTesting')
+       {
+           steps{
+               sh 'mvn test'
+           }
+           post{
+               success{
+                   junit 'target/surefire-reports/*.xml'
+               }
+           }
+       }
+       
+       stage('CodeCoverage')
+       {
+           steps{
+               sh 'mvn cobertura:cobertura -Dcobertura.report.format=xml'
+           }
+           post{
+               success{
+                   cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'target/site/cobertura/coverage.xml', conditionalCoverageTargets: '70, 0, 0', failNoReports: false, failUnhealthy: false, failUnstable: false, lineCoverageTargets: '80, 0, 0', maxNumberOfBuilds: 0, methodCoverageTargets: '80, 0, 0', sourceEncoding: 'ASCII', zoomCoverageChart: false
+               }
+           }
+       }
+       
+       stage('package')
+       {
+           steps{
+               sh 'mvn package'
+           }
+       }
+   }
+   
+   
+}
